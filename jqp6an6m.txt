@@ -1,0 +1,25 @@
+To accomplish these steps in Splunk, you can use a combination of the timechart and eventstats commands. This approach allows you to first segment your data into 10-minute intervals over the last 72 hours, then calculate the count, average, standard deviation, and finally, average + 2 standard deviations for the number of declined transactions. Here's how you could structure your search:
+
+1. Count the Number of Declined Transactions Every 10 Minutes
+spl
+Copy code
+index=your_index_name status=declined earliest=-72h@h latest=@h
+| timechart span=10m count as DeclinedTransactions
+2. Calculate the Average
+3. Calculate the Standard Deviation
+4. Calculate Average + 2 Standard Deviations
+All in one query:
+
+spl
+Copy code
+index=your_index_name status=declined earliest=-72h@h latest=@h
+| timechart span=10m count as DeclinedTransactions
+| eventstats avg(DeclinedTransactions) as AvgTransactions, stdev(DeclinedTransactions) as StdDevTransactions
+| eval AvgPlus2StdDev = AvgTransactions + (2 * StdDevTransactions)
+Here's a breakdown of this query:
+
+index=your_index_name status=declined earliest=-72h@h latest=@h: This specifies the data source and time range.
+| timechart span=10m count as DeclinedTransactions: This creates a time series with 10-minute intervals, counting the number of declined transactions in each interval and labeling the count as DeclinedTransactions.
+| eventstats avg(DeclinedTransactions) as AvgTransactions, stdev(DeclinedTransactions) as StdDevTransactions: This calculates the average and standard deviation across all 10-minute intervals, labeling these as AvgTransactions and StdDevTransactions, respectively.
+| eval AvgPlus2StdDev = AvgTransactions + (2 * StdDevTransactions): This creates a new field that represents the average count of declined transactions plus two times the standard deviation, providing a threshold that could be used to identify unusually high counts of declined transactions.
+This query gives you a comprehensive statistical analysis of declined transactions over the specified period, including the variability of the counts and a threshold for identifying significant deviations from the average.
